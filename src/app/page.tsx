@@ -1,8 +1,10 @@
 "use client";
 // Change this to: import maplibregl from '@mapcreator/maplibre-gl';
-import maplibregl from 'maplibre-gl';
+import maplibregl from '@mapcreator/maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useEffect, useRef } from "react";
+import { use, useEffect, useRef } from "react";
+import { exportSvgString } from '@mapcreator/svg-renderer';
+
 
 export default function Home() {
   const mapContainer: any = useRef(null);
@@ -11,7 +13,10 @@ export default function Home() {
   const lat = 35.6844;
   const zoom = 14;
 
-  const token = "TOKEN_HERE"
+  const the_svg: any = useRef(null);
+
+  const token = "YOUR_TOKEN"
+  const other_token = "YOUR_OTHER_TOKEN"
   const styles = `https://vapi.mc-cdn.io/styles/Aluemedia%20Digital.json?include_token=true&access_token=${token}`
   
   useEffect(() => {
@@ -25,6 +30,18 @@ export default function Home() {
     });
   }, [lng, lat, zoom]);
 
+  useEffect(() => {
+    const f = async () => {
+      if (!map.current) return;
+      the_svg.current = await exportSvgString({
+        map: map.current,
+        api: {
+          token: other_token,
+        },
+      });
+    }
+    f();
+  }, [map]);
 
   return (
     <div>
@@ -40,6 +57,13 @@ export default function Home() {
         width: '800px',
         height: '800px'
       }} />
+
+      {the_svg.current && (
+        <div>
+          <h2>Exported SVG:</h2>
+          <div dangerouslySetInnerHTML={{ __html: the_svg.current }} />
+        </div>
+      )}
       </main>
     </div>
   );
