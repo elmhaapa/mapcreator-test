@@ -37,7 +37,6 @@ export default function Home() {
     }
 
     map.current.once('idle', async () => {
-      console.log("IS THIS CALLED?!")
       const my_svg = await exportSvgString({
         map: map.current,
         api: {
