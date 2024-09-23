@@ -2,7 +2,7 @@
 // Change this to: import maplibregl from '@mapcreator/maplibre-gl';
 import maplibregl from '@mapcreator/maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { use, useEffect, useRef } from "react";
+import {  useState, useEffect, useRef } from "react";
 import { exportSvgString } from '@mapcreator/svg-renderer';
 
 
@@ -13,10 +13,10 @@ export default function Home() {
   const lat = 35.6844;
   const zoom = 14;
 
-  const the_svg: any = useRef(null);
+  const [svg, setSvg] = useState<string | null>(null);
 
-  const token = "YOUR_TOKEN"
-  const other_token = "YOUR_OTHER_TOKEN"
+  const token = ""
+  const other_token = ""
   const styles = `https://vapi.mc-cdn.io/styles/Aluemedia%20Digital.json?include_token=true&access_token=${token}`
   
   useEffect(() => {
@@ -30,24 +30,27 @@ export default function Home() {
     });
   }, [lng, lat, zoom]);
 
-  useEffect(() => {
-    const f = async () => {
-      if (!map.current) return;
-      the_svg.current = await exportSvgString({
+  const createSvg = async () => {
+    if (!map.current) {
+      console.warn('Map not initialized');
+      return
+    }
+
+    map.current.once('idle', async () => {
+      console.log("IS THIS CALLED?!")
+      const my_svg = await exportSvgString({
         map: map.current,
         api: {
           token: other_token,
         },
       });
-    }
-    f();
-  }, [map]);
-
+      setSvg(my_svg);
+    })
+    map.current.fire('idle');
+  }
   return (
     <div>
       <main style={{
-        width: '100vh',
-        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -55,14 +58,24 @@ export default function Home() {
       }}>
       <div ref={mapContainer} className="map" style={{
         width: '800px',
-        height: '800px'
+        height: '800px',
+        marginTop: '20px'
       }} />
 
-      {the_svg.current && (
-        <div>
-          <h2>Exported SVG:</h2>
-          <div dangerouslySetInnerHTML={{ __html: the_svg.current }} />
-        </div>
+      <button onClick={() => {
+        createSvg()
+      }}>Export SVG</button>
+
+      {svg && (
+        <>
+          <h2>SVG Image:</h2>
+          <img style={{
+            width: '800px',
+            height: '800px',
+            marginTop: '20px',
+            marginBottom: '20px'
+          }} src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`} alt="Exported SVG" />
+        </>
       )}
       </main>
     </div>
